@@ -84,7 +84,7 @@ Function Write-ErrToConsole([string]$msg) {
 Function Write-DownloadMessage([string]$ToolName, [string]$Url,$originalHash){
     $strDate = Get-Date -Format "hh:mm:ss"
     Write-Host "[*] [$strDate]`t Please download $toolName from $url and save it to $PSScriptRoot\$FileName"  -ForegroundColor Yellow  
-    Write-Host "[*] [$strDate]`t Please be advised that $toolName is 3rd party tool downloaded from a web server"  -ForegroundColor Yellow
+    Write-Host "[*] [$strDate]`t Please be advised that $toolName is 3rd party tool downloaded from an internet location"  -ForegroundColor Yellow
     Write-Host "[*] [$strDate]`t Press any key when you saved the file"  -ForegroundColor Yellow
     Read-Host | Out-Null
 
