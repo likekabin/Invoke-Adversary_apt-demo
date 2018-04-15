@@ -134,12 +134,12 @@ advised of the possibility of such damages.
 "
     
     Write-Host $Eula -ForegroundColor Green -BackgroundColor Black
-    Write-Host "Please read the legal discalimer carefully and approve that you are acceppting the terms
+    Write-Host "Please read the legal discalimer carefully and approve that you are accepting the terms
 By using this script Windows system's security and stability (passwords dump,disabling security features, etc.) may be affected so DON'T RUN IT ON PRODUCTION systems 
 By writing 'Yes' you acknowledge that you are aware of this and take sole responsibility for any personally identifiable or other sensitive information through your use of the script"  -ForegroundColor Red -BackgroundColor Black
 
     
-    while ($Anwser -ne "Yes"){ $Anwser = Read-Host -Prompt "`nPlease Write Yes to acceppt the terms" }        
+    while ($Anwser -ne "Yes"){ $Anwser = Read-Host -Prompt "`nPlease Write Yes to accept the terms" }        
 }
 
 Function Init() {
